@@ -1,0 +1,282 @@
+
+## Q2. Maven Project Building (30 Marks)
+
+**Objective:** Import, resolve dependencies, and build two Maven projects: a console JAR and a web WAR (index-only).
+
+### Project A: Console JAR Application
+
+1. **Structure**  
+   ```
+   hello-console/
+   ├── src/main/java/com/example/App.java
+   └── pom.xml
+   ```
+
+2. **pom.xml**  
+   ```xml
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                                http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+     <groupId>com.example</groupId>
+     <artifactId>hello-console</artifactId>
+     <version>1.0-SNAPSHOT</version>
+     <packaging>jar</packaging>
+     <properties>
+       <maven.compiler.source>11</maven.compiler.source>
+       <maven.compiler.target>11</maven.compiler.target>
+     </properties>
+     <build>
+       <plugins>
+         <plugin>
+           <groupId>org.apache.maven.plugins</groupId>
+           <artifactId>maven-assembly-plugin</artifactId>
+           <version>3.3.0</version>
+           <configuration>
+             <descriptorRefs>
+               <descriptorRef>jar-with-dependencies</descriptorRef>
+             </descriptorRefs>
+             <archive>
+               <manifest>
+                 <mainClass>com.example.App</mainClass>
+               </manifest>
+             </archive>
+           </configuration>
+           <executions>
+             <execution>
+               <id>assemble-all</id>
+               <phase>package</phase>
+               <goals><goal>single</goal></goals>
+             </execution>
+           </executions>
+         </plugin>
+       </plugins>
+     </build>
+   </project>
+   ```
+
+3. **App.java**  
+   ```java
+   package com.example;
+   public class App {
+     public static void main(String[] args) {
+       System.out.println("Hello World");
+     }
+   }
+   ```
+
+4. **Build**  
+   ```bash
+   cd hello-console
+   mvn clean package
+   # target/hello-console-1.0-SNAPSHOT-jar-with-dependencies.jar
+   ```
+
+### Project B: Web WAR Application (Index-Only)
+
+1. **Structure**  
+   ```
+   hello-web/
+   ├── src/main/webapp/index.jsp
+   ├── src/main/webapp/WEB-INF/web.xml
+   └── pom.xml
+   ```
+
+2. **pom.xml**  
+   ```xml
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                                http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+     <groupId>com.example</groupId>
+     <artifactId>hello-web</artifactId>
+     <version>1.0-SNAPSHOT</version>
+     <packaging>war</packaging>
+     <properties>
+       <maven.compiler.source>11</maven.compiler.source>
+       <maven.compiler.target>11</maven.compiler.target>
+     </properties>
+     <build>
+       <finalName>hello-web</finalName>
+     </build>
+   </project>
+   ```
+
+3. **index.jsp**  
+   ```jsp
+   <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+   <html>
+     <head><title>Hello World</title></head>
+     <body><h1>Hello World</h1></body>
+   </html>
+   ```
+
+4. **web.xml**  
+   ```xml
+   <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="4.0">
+     <welcome-file-list>
+       <welcome-file>index.jsp</welcome-file>
+     </welcome-file-list>
+   </web-app>
+   ```
+
+5. **Build**  
+   ```bash
+   cd hello-web
+   mvn clean package
+   # target/hello-web.war
+   ```
+
+***
+
+## Q3. Git and GitHub (30 Marks)
+
+**Objective:** Initialize version control, perform key operations, and push to GitHub.
+
+1. **Initialize Repository**  
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   ```
+
+2. **Global Config**  
+   ```bash
+   git config --global user.name "Your Name"
+   git config --global user.email "you@example.com"
+   ```
+
+3. **Branching & Merging**  
+   ```bash
+   git checkout -b feature-change
+   # make edits
+   git add . && git commit -m "Feature work"
+   git checkout main
+   git merge feature-change
+   ```
+
+4. **Revert & Reset**  
+   – `git revert <commit-hash>`  
+   – `git reset --hard <commit-hash>`
+
+5. **Push to GitHub**  
+   ```bash
+   git remote add origin https://github.com/username/repo.git
+   git push -u origin main
+   ```
+
+***
+
+## Q4. Docker (20 Marks)
+
+**Objective:** Containerize both projects and push images to Docker Hub.
+
+### Dockerfile for JAR
+
+```dockerfile
+FROM eclipse-temurin:11-jre
+WORKDIR /app
+COPY target/hello-console-1.0-SNAPSHOT-jar-with-dependencies.jar app.jar
+ENTRYPOINT ["java","-jar","app.jar"]
+```
+
+**Commands:**
+```bash
+cd hello-console
+docker build -t yourdockerhubuser/hello-console:1.0 .
+docker images
+docker run --name hello-console hello-console:1.0
+docker logs hello-console
+docker stop hello-console
+docker rm hello-console
+docker push yourdockerhubuser/hello-console:1.0
+```
+
+### Dockerfile for WAR
+
+```dockerfile
+FROM tomcat:9.0-jdk11
+LABEL maintainer="you@example.com"
+COPY target/hello-web.war /usr/local/tomcat/webapps/ROOT.war
+EXPOSE 8080
+CMD ["catalina.sh","run"]
+```
+
+**Commands:**
+```bash
+cd hello-web
+docker build -t yourdockerhubuser/hello-web:1.0 .
+docker images
+docker run -d --name hello-web -p 8080:8080 yourdockerhubuser/hello-web:1.0
+docker ps
+docker logs hello-web
+docker stop hello-web
+docker rm hello-web
+docker push yourdockerhubuser/hello-web:1.0
+```
+
+**SQB:**  
+- *Image vs. Container:*  
+  - **Image:** Static template.  
+  - **Container:** Running instance.  
+- *Key Commands:*  
+  - `docker images` – list images  
+  - `docker ps` – list running containers  
+  - `docker stop <id>` – stop a container  
+  - `docker rm <id>` – remove a container  
+  - `docker rmi <id>` – remove an image
+
+***
+
+## Q5. Docker Compose (10 Marks)
+
+**Objective:** Orchestrate both apps plus a database.
+
+### docker-compose.yml
+
+```yaml
+version: "3.8"
+
+services:
+  console-app:
+    image: yourdockerhubuser/hello-console:1.0
+    container_name: hello-console
+
+  web-app:
+    image: yourdockerhubuser/hello-web:1.0
+    container_name: hello-web
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    container_name: hello-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpass
+    ports:
+      - "3306:3306"
+```
+
+**Commands:**
+```bash
+docker-compose up -d
+docker-compose ps
+docker logs hello-console
+docker logs hello-web
+# For database:
+docker exec -it hello-db mysql -uuser -puserpass testdb
+docker-compose down
+```
+
+***
+
+This master key covers every practical command and configuration needed to excel in the Software Engineering Lab internal practical.
+
+[1](https://ppl-ai-file-upload.s3.amazonaws.com/web/direct-files/attachments/54652636/1aa8d317-f825-4418-a165-a6e1ac51b1be/Exam-Question-Paper-Template.docx)
